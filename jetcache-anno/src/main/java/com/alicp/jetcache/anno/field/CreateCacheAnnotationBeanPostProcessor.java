@@ -22,11 +22,12 @@ import java.lang.reflect.Modifier;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created on 2016/12/9.
  *
- * @author <a href="mailto:areyouok@gmail.com">huangli</a>
+ * @author huangli
  * @see org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor
  */
 @SuppressWarnings("AliMissingOverrideAnnotation")
@@ -38,6 +39,7 @@ public class CreateCacheAnnotationBeanPostProcessor extends AutowiredAnnotationB
     private ConfigurableListableBeanFactory beanFactory;
 
     private final Map<String, InjectionMetadata> injectionMetadataCache = new ConcurrentHashMap<String, InjectionMetadata>();
+    private final ReentrantLock reentrantLock = new ReentrantLock();
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
@@ -49,7 +51,8 @@ public class CreateCacheAnnotationBeanPostProcessor extends AutowiredAnnotationB
         this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
     }
 
-    @Override
+    // removed in spring 6
+    //@Override
     public PropertyValues postProcessPropertyValues(
             PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeanCreationException {
         return postProcessProperties(pvs, bean, beanName);
@@ -76,7 +79,8 @@ public class CreateCacheAnnotationBeanPostProcessor extends AutowiredAnnotationB
         // Quick check on the concurrent map first, with minimal locking.
         InjectionMetadata metadata = this.injectionMetadataCache.get(cacheKey);
         if (InjectionMetadata.needsRefresh(metadata, clazz)) {
-            synchronized (this.injectionMetadataCache) {
+            reentrantLock.lock();
+            try{
                 metadata = this.injectionMetadataCache.get(cacheKey);
                 if (InjectionMetadata.needsRefresh(metadata, clazz)) {
                     if (metadata != null) {
@@ -90,6 +94,8 @@ public class CreateCacheAnnotationBeanPostProcessor extends AutowiredAnnotationB
                                 "] for autowiring metadata: could not find class that it depends on", err);
                     }
                 }
+            }finally {
+                reentrantLock.unlock();
             }
         }
         return metadata;

@@ -14,7 +14,6 @@ import com.alicp.jetcache.template.NotifyMonitorInstaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Resource;
 import java.time.Duration;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -22,13 +21,12 @@ import java.util.function.Function;
 /**
  * Created on 2016/11/29.
  *
- * @author <a href="mailto:areyouok@gmail.com">huangli</a>
+ * @author huangli
  */
 public class ConfigProvider extends AbstractLifecycle {
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigProvider.class);
 
-    @Resource
     protected GlobalCacheConfig globalCacheConfig;
 
     protected EncoderParser encoderParser;

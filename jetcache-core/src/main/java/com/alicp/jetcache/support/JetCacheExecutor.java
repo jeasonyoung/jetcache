@@ -4,17 +4,20 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created on 2017/5/3.
  *
- * @author <a href="mailto:areyouok@gmail.com">huangli</a>
+ * @author huangli
  */
 public class JetCacheExecutor {
     protected volatile static ScheduledExecutorService defaultExecutor;
     protected volatile static ScheduledExecutorService heavyIOExecutor;
+    private static final ReentrantLock reentrantLock = new ReentrantLock();
 
-    private static int threadCount;
+    private static AtomicInteger threadCount = new AtomicInteger(0);
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -34,7 +37,8 @@ public class JetCacheExecutor {
         if (defaultExecutor != null) {
             return defaultExecutor;
         }
-        synchronized (JetCacheExecutor.class) {
+        reentrantLock.lock();
+        try{
             if (defaultExecutor == null) {
                 ThreadFactory tf = r -> {
                     Thread t = new Thread(r, "JetCacheDefaultExecutor");
@@ -44,6 +48,8 @@ public class JetCacheExecutor {
                 defaultExecutor = new ScheduledThreadPoolExecutor(
                         1, tf, new ThreadPoolExecutor.DiscardPolicy());
             }
+        }finally {
+            reentrantLock.unlock();
         }
         return defaultExecutor;
     }
@@ -52,16 +58,19 @@ public class JetCacheExecutor {
         if (heavyIOExecutor != null) {
             return heavyIOExecutor;
         }
-        synchronized (JetCacheExecutor.class) {
+        reentrantLock.lock();
+        try {
             if (heavyIOExecutor == null) {
                 ThreadFactory tf = r -> {
-                    Thread t = new Thread(r, "JetCacheHeavyIOExecutor" + threadCount++);
+                    Thread t = new Thread(r, "JetCacheHeavyIOExecutor" + threadCount.getAndIncrement());
                     t.setDaemon(true);
                     return t;
                 };
                 heavyIOExecutor = new ScheduledThreadPoolExecutor(
                         10, tf, new ThreadPoolExecutor.DiscardPolicy());
             }
+        }finally {
+            reentrantLock.unlock();
         }
         return heavyIOExecutor;
     }

@@ -13,14 +13,13 @@ import com.alicp.jetcache.template.QuickConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PreDestroy;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
- * @author <a href="mailto:areyouok@gmail.com">huangli</a>
+ * @author huangli
  */
 public class SimpleCacheManager implements CacheManager, AutoCloseable {
 
@@ -38,7 +37,6 @@ public class SimpleCacheManager implements CacheManager, AutoCloseable {
     public SimpleCacheManager() {
     }
 
-    @PreDestroy
     @Override
     public void close() {
         broadcastManagers.forEach((area, bm) -> {

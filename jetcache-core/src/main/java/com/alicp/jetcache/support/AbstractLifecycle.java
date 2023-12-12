@@ -3,33 +3,43 @@
  */
 package com.alicp.jetcache.support;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * @author <a href="mailto:areyouok@gmail.com">huangli</a>
+ * @author huangli
  */
 public class AbstractLifecycle {
     private boolean init;
     private boolean shutdown;
 
-    @PostConstruct
-    public final synchronized void init() {
-        if (!init) {
-            doInit();
-            init = true;
+    final ReentrantLock reentrantLock = new ReentrantLock();
+
+    public final void init() {
+        reentrantLock.lock();
+        try {
+            if (!init) {
+                doInit();
+                init = true;
+            }
+        }finally {
+            reentrantLock.unlock();
         }
     }
 
     protected void doInit() {
     }
 
-    @PreDestroy
-    public final synchronized void shutdown() {
-        if (init && !shutdown) {
-            doShutdown();
-            init = false;
-            shutdown = true;
+    public final void shutdown() {
+        reentrantLock.lock();
+        try {
+            if (init && !shutdown) {
+                doShutdown();
+                init = false;
+                shutdown = true;
+            }
+        }finally {
+            reentrantLock.unlock();
         }
     }
 

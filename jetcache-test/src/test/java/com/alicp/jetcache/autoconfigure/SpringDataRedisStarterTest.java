@@ -13,6 +13,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -20,7 +23,7 @@ import javax.annotation.PostConstruct;
 /**
  * Created on 2019/5/1.
  *
- * @author <a href="mailto:areyouok@gmail.com">huangli</a>
+ * @author huangli
  */
 @Configuration
 @EnableAutoConfiguration
@@ -50,5 +53,13 @@ public class SpringDataRedisStarterTest extends SpringTest {
     @Bean(name = "factoryBeanTarget")
     public MyFactoryBean factoryBean() {
         return new MyFactoryBean();
+    }
+
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory() {
+        LettuceConnectionFactory connectionFactory =  new LettuceConnectionFactory(
+                new RedisStandaloneConfiguration("127.0.0.1", 6379));
+        connectionFactory.afterPropertiesSet();
+        return connectionFactory;
     }
 }
